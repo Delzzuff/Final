@@ -1,0 +1,74 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 24.06.2024 11:14:00
+// Design Name: 
+// Module Name: mips32_tb
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module mips32_tb(
+
+    );
+    reg clk1, clk2;
+    integer k;
+    parameter N = 7;// for huge values of N inc simulation time
+    pipe_MIPS32 mips(clk1,clk2);
+    initial
+        begin
+        clk1 = 0 ;clk2 = 0;
+        repeat(1000)
+                begin
+                    #5clk1 = 1; #5 clk1 = 0;
+                    #5clk2 = 1; #5 clk2 = 0;
+                end
+        end
+    initial
+        begin
+            
+            mips.Reg[0] = 0;
+            mips.Reg[7] = 0;
+            mips.Mem[0] = 32'h280a00c8;//ADDI R10,R0,200
+            mips.Mem[1] = 32'h28020001;//ADDI R2 R0 1
+            mips.Mem[2] = 32'h28010000;//ADDI R1,R0,0
+            mips.Mem[3] = 32'h21430000; //LW R3 0 (R10)
+            mips.Mem[4] = 32'h0ce77800;//dummy //OR R7 R7 R7
+            mips.Mem[5] = 32'h00220800;//LOOP ADD R1,R1,R2
+            mips.Mem[6] = 32'h0ce77800;//dummy
+            mips.Mem[7] = 32'h04622000;//SUB R4,R3,R2
+            mips.Mem[8] = 32'h0ce77800;
+            mips.Mem[9] = 32'h28420001;ADDI R2,R2,R1
+            mips.Mem[10] = 32'h0ce77800;            
+            mips.Mem[11] = 32'h3480fff9;// BNEQZ R4,LOOP
+            mips.Mem[12] = 32'h242afffe;// SW R1 -2(R10)
+            mips.Mem[13] = 32'hfc000000;//HLT
+            mips.Mem[200] = N;
+            mips.HALTED = 0;
+            mips.PC = 0;
+            mips.TAKEN_BRANCH = 0;
+            
+            #4000
+                $display ("MEM[200]  = %2d , MEM[198] = %6d",mips.Mem[200] , mips.Mem[198]); 
+            end
+       initial 
+        begin
+            
+            $dumpfile("mips.vcd");
+            $dumpvars(0,mips32_tb);
+            $monitor ("R1: %4d",mips.Reg[1]);
+            #3000 $finish;
+        end
+endmodule
